@@ -1128,7 +1128,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         >
           <div>
           {feature === ANNOTATION_TOOLS.pen ? (
-              <GestureIcon onClick={stopAnnotation} className={classes.active} disabled={true} />
+              <GestureIcon className={classes.active} />
             ) : (
               <GestureIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.pen)} disabled={true} />
             )
@@ -1139,7 +1139,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           title={"Emoji"}
         >
           {feature === ANNOTATION_TOOLS.emoji ? (
-              <SentimentSatisfiedOutlinedIcon onClick={stopAnnotation} className={classes.active} />
+              <SentimentSatisfiedOutlinedIcon className={classes.active} />
             ) : (
               <SentimentSatisfiedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.emoji)} />
             )
@@ -1149,7 +1149,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           title={"Circle"}
         >
           {feature === ANNOTATION_TOOLS.circle ? (
-              <RadioButtonUncheckedOutlinedIcon onClick={stopAnnotation} className={classes.active} />
+              <RadioButtonUncheckedOutlinedIcon className={classes.active} />
             ) : (
               <RadioButtonUncheckedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.circle)} />
             )
