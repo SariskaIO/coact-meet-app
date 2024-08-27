@@ -32,6 +32,7 @@ const Video = (props) => {
         objectFit: "contain",
         borderRadius: "8px",
         transform: isPresenter ? 'initial' : `scaleX(-1)`,
+       // zIndex: 1
       }}
     />
   );

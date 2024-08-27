@@ -21,6 +21,8 @@ import {
   PRESENTATION,
   GRID,
   ENTER_FULL_SCREEN_MODE,
+  PARTICIPANTS_LOCAL_PROPERTIES,
+  ANNOTATION_TOOLS,
 } from "../../constants";
 import { addMessage } from "../../store/actions/message";
 import { getUserById, preloadIframes, getDefaultDeviceId, isPortrait, isMobileOrTab } from "../../utils";
@@ -48,6 +50,8 @@ import {
   setDevices,
   setMicrophone,
 } from "../../store/actions/media";
+import { addAnnotationFeature, setAnnotator } from "../../store/actions/annotation";
+import { SET_ANNOTATION_FEATURE } from "../../store/actions/types";
 
 const Meeting = () => {
   const history = useHistory();
@@ -60,10 +64,11 @@ const Meeting = () => {
   const snackbar = useSelector((state) => state.snackbar);
   const isOnline = useOnlineStatus();
   const resolution = useSelector((state) => state.media?.resolution);
+  const annotation = useSelector((state) => state.annotation);
   const [dominantSpeakerId, setDominantSpeakerId] = useState(null);
   const [lobbyUser, setLobbyUser] = useState([]);
   let oldDevices = useSelector((state) => state?.media?.devices);
-
+  
   const useStyles = makeStyles((theme) => ({
     root: {
       display: "flex",
@@ -174,16 +179,25 @@ const Meeting = () => {
   };
 
   const destroy = async () => {
-    if (conference.getParticipantCount() - 1 === 0) {
-      fetch(
-        `https://whiteboard.sariska.io/boards/delete/${conference.connection.name}`,
-        { method: "DELETE", mode: "cors" }
-      );
-      fetch(
-        `https://etherpad.sariska.io/api/1/deletePad?apikey=a97b8845463ab348a91717f9887842edf0df15e395977c2dad12c56bca146d6e&padID=${conference.connection.name}`,
-        { method: "GET", mode: "cors" }
-      );
-    }
+      if (conference.getParticipantCount() - 1 === 0) {
+        try {
+          await fetch(
+            `https://whiteboard.sariska.io/boards/delete/${conference.connection.name}`,
+            { method: "DELETE", mode: "cors" }
+          );
+        } catch (error) {
+          console.log('error in deleting whiteboard', error);
+        }
+        try{
+          await fetch(
+            `https://etherpad.sariska.io/api/1/deletePad?apikey=27fd6f9e85c304447d3cc0fb31e7ba8062df58af86ac3f9437&padID=${conference.connection.name}`,
+            { method: "GET", mode: "cors" }
+          );  
+        } catch (error) {
+          console.log('error in deleting etherpad', error);
+        }
+      }
+      
     if (conference?.isJoined()) {
       await conference?.leave();
     }
@@ -214,7 +228,20 @@ const Meeting = () => {
       }
 
       if (item._properties?.handraise === "start") {
+        console.log('raiseconference.getParticipantsWithoutHidden', item.Id);
         dispatch(setRaiseHand({ participantId: item._id, raiseHand: true }));
+      }
+      if (item._properties?.annotation === "start") {
+        dispatch(setAnnotator({ participantId: item._id, annotator: true }));
+      }
+      if (item._properties?.annotationTool === ANNOTATION_TOOLS.pen) {
+        dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.pen));
+      }
+      if (item._properties?.annotationTool === ANNOTATION_TOOLS.emoji) {
+        dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.emoji));
+      }
+      if (item._properties?.annotationTool === ANNOTATION_TOOLS.circle) {
+        dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.circle));
       }
 
       if (item._properties?.isModerator === "true") {
@@ -272,7 +299,6 @@ const Meeting = () => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.DOMINANT_SPEAKER_CHANGED,
       (id) => {
-        console.log("DOMINANT_SPEAKER_CHANGED", id);
         setDominantSpeakerId(id);
       }
     );
@@ -305,16 +331,41 @@ const Meeting = () => {
           );
         }
 
-        if (key === "handraise" && newValue === "start") {
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.HANDRAISE && newValue === "start") {
           dispatch(
             setRaiseHand({ participantId: participant._id, raiseHand: true })
           );
         }
 
-        if (key === "handraise" && newValue === "stop") {
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.HANDRAISE && newValue === "stop") {
           dispatch(
             setRaiseHand({ participantId: participant._id, raiseHand: false })
           );
+        }
+
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION && newValue === "start") {
+          dispatch(
+            setAnnotator({ participantId: participant._id, annotator: true })
+          );
+        }
+
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION && newValue === "stop") {
+          dispatch(
+            setAnnotator({ participantId: participant._id, annotator: false })
+          );
+        }
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === ANNOTATION_TOOLS.pen) {
+          dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.pen));
+        }
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === ANNOTATION_TOOLS.emoji) {  
+          dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.emoji));
+        }
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === ANNOTATION_TOOLS.circle) {
+          dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.circle));
+        }
+
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === "") {
+          dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ''));
         }
 
         if (key === "isModerator" && newValue === "true") {
@@ -512,6 +563,10 @@ const Meeting = () => {
       if (layout.raisedHandParticipantIds[id]) {
         dispatch(setRaiseHand({ participantId: id, raiseHand: null }));
       }
+      if (annotation.annotator[id]) {
+        dispatch(setAnnotator({ participantId: id, annotator: null }));
+        dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ''));
+      }
       dispatch(participantLeft(id));
     };
     conference.addEventListener(
@@ -530,12 +585,12 @@ const Meeting = () => {
     SariskaMediaTransport.setNetworkInfo({ isOnline });
   }, [isOnline]);
 
-  useEffect(()=> {
-    if(isMobileOrTab()) {
-      if(layout.type === SPEAKER)
-      dispatch(setLayout(GRID));
-    }
-  },[])
+  // useEffect(()=> {
+  //   if(isMobileOrTab()) {
+  //     if(layout.type === SPEAKER)
+  //     dispatch(setLayout(GRID));
+  //   }
+  // },[])
   
   if (!conference || !conference.isJoined()) {
     return <Home />;
@@ -555,9 +610,9 @@ const Meeting = () => {
       {layout.type === SPEAKER && (
         <SpeakerLayout dominantSpeakerId={dominantSpeakerId} />
       )}
-      {layout.type === GRID && (
+      {/* {layout.type === GRID && (
         <GridLayout dominantSpeakerId={dominantSpeakerId} />
-      )}
+      )} */}
       
       {layout.type === PRESENTATION && (
         <PresentationLayout dominantSpeakerId={dominantSpeakerId} />

@@ -15,6 +15,7 @@ import {notification} from "./notification";
 import {subtitle} from "./subtitle";
 import {snackbar} from "./snackbar";
 import { EXIT_FULL_SCREEN_MODE } from "../../constants";
+import { annotation } from "./annotation";
 
 export const appReducer = combineReducers({
     conference,
@@ -30,7 +31,8 @@ export const appReducer = combineReducers({
     audioIndicator,
     notification,
     subtitle,
-    snackbar
+    snackbar, 
+    annotation
 });
 
 export const rootReducer = (state, action) => {

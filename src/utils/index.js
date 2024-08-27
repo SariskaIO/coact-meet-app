@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import {GENERATE_TOKEN_URL, GET_PRESIGNED_URL, ENTER_FULL_SCREEN_MODE, LIVE_STREAMING_START_URL, LIVE_STREAMING_STOP_URL} from "../constants";
+import {GENERATE_TOKEN_URL, GET_PRESIGNED_URL, ENTER_FULL_SCREEN_MODE, LIVE_STREAMING_START_URL, LIVE_STREAMING_STOP_URL, ANNOTATION_TOOLS} from "../constants";
 import linkifyHtml from 'linkify-html';
 
 const Compressor = require('compressorjs');
@@ -60,7 +60,8 @@ export async function getToken(profile, name, avatarColor) {
                 id: profile.id,
                 avatar: avatarColor,
                 name: name,
-                email: profile.email
+                email: profile.email,
+                moderator: name === 'admin' ? true : false
             },
             exp: "48 hours"
         })
@@ -632,6 +633,108 @@ export function formatBytes(bytes) {
     else return (bytes / gigaBytes).toFixed(decimal) + " GB";
 }
 
-export const getParticipants = (conference, localUser) => {
-    return [...conference.getParticipantsWithoutHidden(), { _identity: { user: localUser }, _id: localUser.id }]
+export const getLocalParticipant = (conference) => {
+    if(!conference) return;
+    const localUser = conference.getLocalUser();
+    return { _identity: { user: localUser }, _id: localUser.id };
+}
+
+
+export const getParticipants = (conference) => {
+    if(!conference) return;
+    const localUser = getLocalParticipant(conference);
+    return [...conference.getParticipantsWithoutHidden(), localUser]
+}
+
+export const getRandomParticipant = (conference, name, id) => {
+    if(!conference) return;
+    const participants = getParticipants(conference);
+    if(participants?.length){
+        if(id){
+            return participants.filter(participant => participant._id === id)[0];
+        }
+        if(name){
+           return participants.filter(participant => participant._identity?.user.name === name)[0];
+        }
+    }
+   return null;
+}
+
+export const getModerator = (conference) => {
+    if(!conference){
+        return null;
+    }
+    let totalParticipants = getParticipants(conference);
+    if(totalParticipants?.length===1){
+        return totalParticipants[0];
+    }
+    if(totalParticipants?.length > 1){
+        let moderator = totalParticipants?.find(participant => participant?._role ==='moderator');
+            if(!moderator) {
+                return getLocalParticipant(conference);
+            }else{
+                return moderator;
+            }
+    }else{
+        return null;
+    }
+  }
+
+export const isModerator = (conference) => {
+    if(!conference) return;
+    return conference.isModerator();
+  }
+
+  export const isModeratorLocal = (conference) => {
+    if(!conference) return ;
+    let moderator = getModerator(conference);
+    if(!moderator) return;
+    let localUser = conference.getLocalUser();
+    if(moderator?._identity?.user?.id === localUser?.id){
+        return true;
+    }else{
+        return false;
+    }
+  }
+
+  export const getAnnotator = (conference, annotation) => {
+    if(!conference) return null;
+    return conference?.getParticipantsWithoutHidden()?.find(participant => participant._properties?.annotation === "start") || annotation.annotator;  
+  }
+
+  export const isAnnotator = (conference, annotation) => {
+    if(!conference) return null;
+    let annotator = getAnnotator(conference, annotation);
+    return (annotator && Object.keys(annotator)?.length) ? true : false
+  }
+
+  export const getAnnotationTool = (annotation) => {
+    switch(annotation.feature){
+        case ANNOTATION_TOOLS.pen:
+            return ANNOTATION_TOOLS.pen;
+        case ANNOTATION_TOOLS.emoji:
+            return ANNOTATION_TOOLS.emoji;
+        case ANNOTATION_TOOLS.circle:
+            return ANNOTATION_TOOLS.circle;
+        case ANNOTATION_TOOLS.textBox:
+            return ANNOTATION_TOOLS.textBox;
+        default:
+            return '';
+    }
+  }
+
+  export function clearCanvas(ctx, width, height){
+    ctx.clearRect(0, 0, width, height)
+}
+
+export function computePointInCanvas(clientX, clientY, refCurrent){
+    if(refCurrent){
+        const boundingRect = refCurrent.getBoundingClientRect();
+        return {
+            x: clientX - boundingRect.left,
+            y: clientY - boundingRect.top
+        }
+    }else{
+        return null;
+    }
 }
