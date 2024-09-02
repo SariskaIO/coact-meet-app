@@ -1,9 +1,11 @@
+import { isKeyExist } from "../../utils";
 import {
   SET_CAMERA,
   SET_MICROPHONE,
   SET_RESOLUTION,
   SET_SPEAKER,
-  SET_DEVICES
+  SET_DEVICES,
+  ENABLE_PARTICIPANT_MEDIA
 } from "../actions/types";
 
 const initialState = {
@@ -12,7 +14,8 @@ const initialState = {
   camera: "",
   devices: null,
   resolution: 720,
-  aspectRatio: 16/9
+  aspectRatio: 16/9,
+  enabledMediaParticipantIds: {}
 };
 
 export const media = (state = initialState, action) => {
@@ -43,6 +46,15 @@ export const media = (state = initialState, action) => {
       return {
         ...state,
       };
+    case ENABLE_PARTICIPANT_MEDIA:
+      if(action.payload.media){
+        state.enabledMediaParticipantIds[action.payload.participantId] = {
+          [action.payload.media]: true
+        }
+      }else{
+          delete state.enabledMediaParticipantIds[action.payload.participantId]; 
+      }
+    return {...state};
     default:
       return state;
   }

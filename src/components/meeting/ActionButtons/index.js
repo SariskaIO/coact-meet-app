@@ -66,6 +66,7 @@ import { clearAllReducers } from "../../../store/actions/conference";
 import {
   exitFullscreen,
   formatAMPM,
+  getModerator,
   getRandomColor,
   isFullscreen,
   isModerator,
@@ -90,6 +91,7 @@ import googleApi from "../../../utils/google-apis";
 import LiveStreamDialog from "../../shared/LiveStreamDialog";
 import { SET_ANNOTATION_FEATURE, SET_ANNOTATION_STYLE } from "../../../store/actions/types";
 import { addAnnotationFeature, clearAllAnnotation, removeAnnotationFeature, setAnnotator, updateAnnotationStyle } from "../../../store/actions/annotation";
+import { enableParticipantMedia } from "../../../store/actions/media";
 
 const StyledBadge = withStyles((theme) => ({
   badge: {
@@ -301,8 +303,14 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   const layout = useSelector((state) => state.layout);
   const annotation = useSelector((state) => state.annotation);
   const unread = useSelector((state) => state.chat.unreadMessage);
+  const enabledMediaParticipantIds = useSelector(state => state.media?.enabledMediaParticipantIds);
+  const [isRequestingUnmute, setIsRequestingUnmute] = useState(false);
   const [raiseHand, setRaiseHand] = useState(false);
   const [annotatingColor, setAnnotatingColor] = useState('#fff');
+  const [isParticipantMediaEnabled, setIsParticipantMediaEnabled] = useState({
+    audio: false,
+    video: false
+  })
   const [featureStates, setFeatureStates] = useState({});
   const [chatState, setChatState] = React.useState({
     right: false,
@@ -316,12 +324,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   const [moreActionState, setMoreActionState] = React.useState({
     right: false,
   });
-  const initialAnnotationState = {
-    pen: false,
-    circle: false, 
-    textBox: false,
-    emoji: false
-  }
   const { feature } = useSelector(state => state.annotation);
   const [openLivestreamDialog, setOpenLivestreamDialog] = useState(false);
   const [broadcasts, setBroadcasts] = useState([]);
@@ -336,24 +338,38 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     setFeatureStates({ ...featureStates });
   };
   
-  const muteAudio = async () => {
-    await audioTrack?.mute();
+  const muteMedia = async(type) => {
+    if(type === 'audio'){
+      await audioTrack?.mute();
+    }
+    if(type === 'video'){
+      await videoTrack?.mute();
+    }
     dispatch(localTrackMutedChanged());
-  };
+  }
 
-  const unmuteAudio = async () => {
-    await audioTrack?.unmute();
-    dispatch(localTrackMutedChanged());
-  };
-
-  const muteVideo = async () => {
-    await videoTrack?.mute();
-    dispatch(localTrackMutedChanged());
-  };
-
-  const unmuteVideo = async () => {
-    await videoTrack?.unmute();
-    dispatch(localTrackMutedChanged());
+  const unmuteMedia = async (type) => {
+    if(!isModerator(conference)) {
+      dispatch(
+        showNotification({
+          severity: "info",
+          autoHide: true,
+          message: `Asking to enable ${type}!`,
+        })
+      );
+      conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ENABLE_MEDIA, type);
+     // setIsRequestingUnmute(true);
+      conference.sendCommand('request-media-unmute', { value: type })
+      conference.removeCommand('request-media-unmute');
+    }else{
+      if(type === 'audio'){
+        await audioTrack?.unmute();
+      }
+      if(type === 'video'){
+        await videoTrack?.unmute();
+      }
+      dispatch(localTrackMutedChanged());
+    }
   };
 
   const removeLocalParticipantProperties = () => {
@@ -362,7 +378,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   }
 
   const updateColor = () => {
-    if(!isModeratorLocal(conference)) {
+    if(!isModerator(conference)) {
       return dispatch(
         showNotification({
           severity: "error",
@@ -383,13 +399,13 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     if(annotation.feature === ANNOTATION_TOOLS.pen){
       dispatch(updateAnnotationStyle(SET_ANNOTATION_STYLE, randomColor));
     }else{
-      removeLocalParticipantProperties();
+     // removeLocalParticipantProperties();
       dispatch(updateAnnotationStyle(SET_ANNOTATION_STYLE, randomColor));
     }
   }
 
   const startAnnotation = (tool) => {
-    if(!isModeratorLocal(conference)) {
+    if(!isModerator(conference)) {
       return dispatch(
         showNotification({
           severity: "error",
@@ -412,6 +428,25 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL, tool);
   }
 
+  const notifyStatus = (tool) => {
+    if(!isModerator(conference)) {
+      return dispatch(
+        showNotification({
+          severity: "error",
+          autoHide: true,
+          message: "You are not moderator!!",
+        })
+      );
+    }else{
+      return dispatch(
+        showNotification({
+          severity: "error",
+          autoHide: true,
+          message: `Already selected the ${tool.toLowerCase()}!`,
+        })
+      );
+    }
+  }
   const stopAnnotation = () => {
     if(!isModeratorLocal(conference)) {
       return dispatch(
@@ -433,25 +468,9 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     dispatch(setAnnotator({ participantId: myUserId, annotator: false, annotationTool: '' }));
     removeLocalParticipantProperties()
   }
-
-  // const enableEmoji = () => {
-  //   setIsAnnotation(prev => ({...prev, emoji: true}));
-  //   dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.emoji));
-  //   dispatch(setAnnotator({ participantId: myUserId, annotator: true, annotationTool: ANNOTATION_TOOLS.emoji }));
-  //   conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION, "start");
-  //   conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL, "emoji");
-  // }
-
-  // const disableEmoji = () => {
-  //   setIsAnnotation(prev => ({...prev, emoji: false}));
-  //   dispatch(removeAnnotationFeature(SET_ANNOTATION_FEATURE));
-  //   dispatch(setAnnotator({ participantId: myUserId, annotator: false, annotationTool: '' }));
-  //   conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION, "stop");
-  //   conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL, "");
-  // }
   
   const handleClearAllAnnotation = () => {
-    if(!isModeratorLocal(conference)) {
+    if(!isModerator(conference)) {
       return dispatch(
         showNotification({
           severity: "error",
@@ -1079,6 +1098,8 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     history.push("/leave");
   };
   
+  const isModeratorFlag = conference && isModerator(conference);
+  let disabledIconStyle = { opacity: isModeratorFlag ? 1 : 0.5}
   return (
     <Box id="footer" className={classes.root}>
 
@@ -1121,16 +1142,17 @@ const ActionButtons = ({ dominantSpeakerId }) => {
       <StyledTooltip
           title={"Change Color"}
         >
-          <ColorLensIcon onClick={updateColor} style={{fill: annotatingColor}} />
+          <ColorLensIcon onClick={updateColor} 
+            style={{fill: annotatingColor, opacity: isModeratorFlag ? 1 : 0.5}} />
         </StyledTooltip>
       <StyledTooltip
           title={"Pen"}
         >
           <div>
           {feature === ANNOTATION_TOOLS.pen ? (
-              <GestureIcon className={classes.active} />
+              <GestureIcon onClick={() => notifyStatus(ANNOTATION_TOOLS.pen)} className={classes.active} style={disabledIconStyle} />
             ) : (
-              <GestureIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.pen)} disabled={true} />
+              <GestureIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.pen)} style={disabledIconStyle} />
             )
           }
           </div>
@@ -1139,9 +1161,9 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           title={"Emoji"}
         >
           {feature === ANNOTATION_TOOLS.emoji ? (
-              <SentimentSatisfiedOutlinedIcon className={classes.active} />
+              <SentimentSatisfiedOutlinedIcon onClick={() => notifyStatus(ANNOTATION_TOOLS.emoji)} className={classes.active} style={disabledIconStyle}  />
             ) : (
-              <SentimentSatisfiedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.emoji)} />
+              <SentimentSatisfiedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.emoji)} style={disabledIconStyle} />
             )
           }
         </StyledTooltip>
@@ -1149,57 +1171,58 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           title={"Circle"}
         >
           {feature === ANNOTATION_TOOLS.circle ? (
-              <RadioButtonUncheckedOutlinedIcon className={classes.active} />
+              <RadioButtonUncheckedOutlinedIcon onClick={() => notifyStatus(ANNOTATION_TOOLS.circle)} className={classes.active} style={disabledIconStyle}  />
             ) : (
-              <RadioButtonUncheckedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.circle)} />
+              <RadioButtonUncheckedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.circle)} style={disabledIconStyle} />
             )
           }
         </StyledTooltip>
-        {/* <StyledTooltip
-          title={isAnnotation.textBox
-                ? "Cancel"
-                : "Text Box"
-          }
+        <StyledTooltip
+          title={"Text Box"}
         >
-          {isAnnotation.textBox ? (
-              <TextFieldsIcon onClick={stopTextBox} className={classes.active} />
+          <div>
+          {feature === ANNOTATION_TOOLS.textbox ? (
+              <TextFieldsIcon onClick={() => notifyStatus(ANNOTATION_TOOLS.textbox)} className={classes.active} style={disabledIconStyle}  />
             ) : (
-              <TextFieldsIcon onClick={startTextBox} />
+              <TextFieldsIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.textbox)} style={disabledIconStyle} />
             )
           }
-        </StyledTooltip> */}
+          </div>
+        </StyledTooltip>
         <StyledTooltip
           title={"Clear Annotation"}
-          disabled={!isModerator(conference)}
         >
-          <LayersClearIcon onClick={handleClearAllAnnotation} />
+          <LayersClearIcon onClick={handleClearAllAnnotation} style={disabledIconStyle} />
         </StyledTooltip>
         <StyledTooltip
           title={
+            isModeratorFlag ?
             audioTrack
               ? audioTrack?.isMuted()
                 ? "Unmute Audio"
                 : "Mute Audio"
               : "Check the mic or Speaker"
+            :
+            "Request to unmute Audio"
           }
         >
           {audioTrack ? (
             audioTrack?.isMuted() ? (
-              <MicOffIcon onClick={unmuteAudio} className={classes.active} />
+              <MicOffIcon onClick={() => unmuteMedia('audio')} className={classes.active} />
             ) : (
-              <MicIcon onClick={muteAudio} />
+              <MicIcon onClick={() => muteMedia('audio')} />
             )
           ) : (
-            <MicIcon onClick={muteAudio} style={{ cursor: "unset" }} />
+            <MicIcon onClick={() => muteMedia('audio')} style={{ cursor: "unset" }} />
           )}
         </StyledTooltip>
         <StyledTooltip
-          title={videoTrack?.isMuted() ? "Unmute Video" : "Mute Video"}
+          title={isModeratorFlag ? videoTrack?.isMuted() ? "Unmute Video" : "Mute Video" : "Request to unmute Video"}
         >
           {videoTrack?.isMuted() ? (
-            <VideocamOffIcon onClick={unmuteVideo} className={classes.active} />
+            <VideocamOffIcon onClick={() => unmuteMedia('video')} className={classes.active} />
           ) : (
-            <VideocamIcon onClick={muteVideo} />
+            <VideocamIcon onClick={() => muteMedia('video')} />
           )}
         </StyledTooltip>
         <StyledTooltip title={presenting ? "Stop Presenting" : "Share Screen"}>

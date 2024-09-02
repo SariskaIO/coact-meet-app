@@ -38,7 +38,7 @@ const SpeakerLayout = ({dominantSpeakerId}) => {
     if ( conference.getParticipantCount() === 2 ) {
         largeVideoId = conference.getParticipantsWithoutHidden()[0]?._id;
     }
-    const largeVideoParticipant = getRandomParticipant(conference, 'admin', null);
+    const largeVideoParticipant = getRandomParticipant(conference, null, 'admin');
     
     largeVideoId = largeVideoParticipant?._id || layout.pinnedParticipant.participantId || layout.presenterParticipantIds.slice(0).pop() || largeVideoId || dominantSpeakerId || myUserId;
     isPresenter = layout.presenterParticipantIds.find(item=>item===largeVideoId);

@@ -11,7 +11,7 @@ import React, { useEffect, useState, useRef } from "react";
 import SariskaMediaTransport from "sariska-media-transport";
 import { color } from "../../../assets/styles/_color";
 import { useHistory } from "react-router-dom";
-import { localTrackMutedChanged } from "../../../store/actions/track";
+import { localTrackMutedChanged, updateLocalTrack } from "../../../store/actions/track";
 import { addConference } from "../../../store/actions/conference";
 import {
   getToken,
@@ -337,10 +337,15 @@ const LobbyRoom = ({ tracks }) => {
       SariskaMediaTransport.events.conference.CONFERENCE_JOINED,
       () => {
         setLoading(false);
+        // conference.setStartMutedPolicy({
+        //   audio: true,
+        //   video: true,
+        // });
         dispatch(addConference(conference));
         dispatch(setProfile(conference.getLocalUser()));
         dispatch(setMeeting({ meetingTitle }));
         dispatch(addThumbnailColor({participantId: conference?.myUserId(), color:  profile?.color}));
+
       }
     );
 
@@ -366,7 +371,15 @@ const LobbyRoom = ({ tracks }) => {
 
     conference.addEventListener(
       SariskaMediaTransport.events.conference.USER_JOINED,
-      (id) => {
+      (id, participant) => {
+        if (!conference.isModerator()) {
+          const tracks = conference.getLocalTracks();
+          tracks.forEach(async(track) => {
+              if (track.getType() === 'audio' || track.getType() === 'video') {
+                  track.mute();
+              }
+          });
+      }
         dispatch(
           addThumbnailColor({ participantId: id, color: getRandomColor() })
         );

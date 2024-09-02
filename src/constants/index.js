@@ -134,12 +134,13 @@ export const PARTICIPANTS_LOCAL_PROPERTIES = {
     UNMUTE_AUDIO: "unmuteAudio",
     UNMUTE_VIDEO: "unmuteVideo",
     ANNOTATION: "annotation",
-    ANNOTATION_TOOL: "annotationTool"
+    ANNOTATION_TOOL: "annotationTool",
+    ENABLE_MEDIA: "enableMedia"
 }
 
 export const ANNOTATION_TOOLS = {
     pen: 'PEN',
     emoji: 'EMOJI',
     circle: 'CIRCLE',
-    textBox: 'TEXTBOX'
+    textbox: 'TEXTBOX'
 }

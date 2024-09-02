@@ -646,7 +646,7 @@ export const getParticipants = (conference) => {
     return [...conference.getParticipantsWithoutHidden(), localUser]
 }
 
-export const getRandomParticipant = (conference, name, id) => {
+export const getRandomParticipant = (conference, id, name ) => {
     if(!conference) return;
     const participants = getParticipants(conference);
     if(participants?.length){
@@ -656,6 +656,15 @@ export const getRandomParticipant = (conference, name, id) => {
         if(name){
            return participants.filter(participant => participant._identity?.user.name === name)[0];
         }
+    }
+   return null;
+}
+
+export const getParticipantName = (conference, id) => {
+    if(!conference) return;
+    const participant = getRandomParticipant(conference, id);
+    if(participant){
+        return participant?._identity.user.name
     }
    return null;
 }
@@ -716,8 +725,8 @@ export const isModerator = (conference) => {
             return ANNOTATION_TOOLS.emoji;
         case ANNOTATION_TOOLS.circle:
             return ANNOTATION_TOOLS.circle;
-        case ANNOTATION_TOOLS.textBox:
-            return ANNOTATION_TOOLS.textBox;
+        case ANNOTATION_TOOLS.textbox:
+            return ANNOTATION_TOOLS.textbox;
         default:
             return '';
     }
@@ -737,4 +746,11 @@ export function computePointInCanvas(clientX, clientY, refCurrent){
     }else{
         return null;
     }
+}
+
+export const isKeyExist = (obj, key) => {
+    if(!obj && !key){
+        return;
+    }
+    return key in obj;
 }

@@ -46,12 +46,14 @@ import { setUserResolution } from "../../store/actions/layout";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import ReactGA from "react-ga4";
 import {
+  enableParticipantMedia,
   setCamera,
   setDevices,
   setMicrophone,
 } from "../../store/actions/media";
 import { addAnnotationFeature, setAnnotator } from "../../store/actions/annotation";
 import { SET_ANNOTATION_FEATURE } from "../../store/actions/types";
+import { getParticipantName } from '../../utils/index';
 
 const Meeting = () => {
   const history = useHistory();
@@ -63,6 +65,8 @@ const Meeting = () => {
   const notification = useSelector((state) => state.notification);
   const snackbar = useSelector((state) => state.snackbar);
   const isOnline = useOnlineStatus();
+  const enabledMediaParticipantIds = useSelector((state) => state.media?.enabledMediaParticipantIds);
+  const [unmuteRequests, setUnmuteRequests] = useState([]);
   const resolution = useSelector((state) => state.media?.resolution);
   const annotation = useSelector((state) => state.annotation);
   const [dominantSpeakerId, setDominantSpeakerId] = useState(null);
@@ -91,6 +95,35 @@ const Meeting = () => {
     conference.lobbyDenyAccess(userId);
     setLobbyUser((lobbyUser) => lobbyUser.filter((item) => item.id !== userId));
   };
+  
+  const allowUnmuteAccess = (req) => {
+    // Approve the unmute request
+    conference.sendCommandOnce('unmute-media-approval', {
+        value: 'approved',
+        attributes: { participantId: req.id, variant: req.value },
+    });  
+
+    setUnmuteRequests((prevRequests) =>
+        prevRequests.filter((prevReq) => !(prevReq?.id === req.id && prevReq?.value === req.value))
+    );
+  };
+
+  const rejectUnmuteAccess = (req) => {
+      // Reject the unmute request
+      conference.sendCommandOnce('unmute-media-approval', {
+          value: 'rejected',
+          attributes: { participantId: req.id, variant: req.value },
+      });
+
+      setUnmuteRequests((prevRequests) =>
+        prevRequests.filter((prevReq) => !(prevReq?.id === req.id && prevReq?.value === req.value))
+      );
+  };
+
+  // const allowMedia = (userId) => {
+  //   dispatch(enableParticipantMedia({ participantId: userId, media: "audio" }));
+  // }
+
 
   const deviceListChanged = async (devices) => {
     let selectedDeviceOld,
@@ -210,11 +243,40 @@ const Meeting = () => {
       deviceListChanged
     );
   };
-
+console.log('prevrew', unmuteRequests)
   useEffect(() => {
     if (!conference) {
       return;
     }
+    conference.addCommandListener('request-media-unmute', (data, id) => {
+      if(conference.isModerator()){
+        setUnmuteRequests((prevRequests) => [...prevRequests, {id, value: data?.value}]);
+      }
+    });
+
+    conference.addCommandListener('unmute-media-approval', async(data, id) => {
+      const {value, attributes: {participantId, variant}} = data;
+      if (value === 'approved' && participantId === conference.myUserId()) {
+          // Unmute the participant's audio track
+          dispatch(
+            showNotification({
+              severity: "info",
+              autoHide: true,
+              message: `Request to enable ${variant} has been approved`,
+            })
+          );
+          let track = localTracks.find((track) => track?.getType() === data.attributes?.variant);
+          return await track.unmute();
+      } 
+      if(value === 'rejected' && participantId === conference.myUserId()) {
+       return dispatch(
+          showNotification({
+            severity: "info",
+            autoHide: true,
+            message: `Request to enable ${variant} has been rejected`,
+          })
+    )}
+  });
 
     conference.getParticipantsWithoutHidden().forEach((item) => {
       if (item._properties?.presenting === "start") {
@@ -228,7 +290,6 @@ const Meeting = () => {
       }
 
       if (item._properties?.handraise === "start") {
-        console.log('raiseconference.getParticipantsWithoutHidden', item.Id);
         dispatch(setRaiseHand({ participantId: item._id, raiseHand: true }));
       }
       if (item._properties?.annotation === "start") {
@@ -243,7 +304,18 @@ const Meeting = () => {
       if (item._properties?.annotationTool === ANNOTATION_TOOLS.circle) {
         dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.circle));
       }
-
+      if (item._properties?.annotationTool === ANNOTATION_TOOLS.textbox) {
+        dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.textbox));
+      }
+      if (item._properties?.enableMedia === "audio") {
+        dispatch(enableParticipantMedia({ participantId: item._id, media: "audio" }));
+      }
+      if (item._properties?.enableMedia === "video") {
+        dispatch(enableParticipantMedia({ participantId: item._id, media: "video" }));
+      }
+      if (item._properties?.enableMedia === "") {
+        dispatch(enableParticipantMedia({ participantId: item._id, media: "" }));
+      }
       if (item._properties?.isModerator === "true") {
         dispatch(setModerator({ participantId: item._id, isModerator: true }));
       }
@@ -363,9 +435,28 @@ const Meeting = () => {
         if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === ANNOTATION_TOOLS.circle) {
           dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.circle));
         }
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === ANNOTATION_TOOLS.textbox) {
+          dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.textbox));
+        }
 
         if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === "") {
           dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ''));
+        }
+
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ENABLE_MEDIA && newValue === "audio") {
+          dispatch(
+            enableParticipantMedia({ participantId: participant._id, media: "audio" })
+          );
+        }
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ENABLE_MEDIA && newValue === "video") {
+          dispatch(
+            enableParticipantMedia({ participantId: participant._id, media: "video" })
+          );
+        }
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ENABLE_MEDIA && newValue === "") {
+          dispatch(
+            enableParticipantMedia({ participantId: participant._id, media: "" })
+          );
         }
 
         if (key === "isModerator" && newValue === "true") {
@@ -578,6 +669,7 @@ const Meeting = () => {
         SariskaMediaTransport.events.conference.USER_LEFT,
         userLeft
       );
+      conference.removeCommandListener('request-media-unmute', () => console.log('removed request-media-unmute command'))
     };
   }, [conference, layout]);
 
@@ -625,8 +717,17 @@ const Meeting = () => {
           allowLobbyAccess={allowLobbyAccess}
           userId={item.id}
           displayName={item.displayName}
+          text={`${item.displayName ? item.displayName : 'Participant'} wants to join`}
         />
       ))}
+      {unmuteRequests?.map((req) => (
+        <PermissionDialog
+        denyLobbyAccess={() => rejectUnmuteAccess(req)}
+        allowLobbyAccess={() => allowUnmuteAccess(req)}
+        userId={req?.id}
+        text={`${getParticipantName(conference, req?.id) ? getParticipantName(conference, req?.id) : 'Participant'} have requested to unmute ${req?.value}`}
+      />
+            ))}
       <SnackbarBox notification={notification} />
       <ReconnectDialog open={layout.disconnected === "lost"} />
       <Notification snackbar={snackbar} />

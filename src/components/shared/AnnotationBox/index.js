@@ -24,7 +24,6 @@ import VideoBoxContent from "../VideoBoxContent";
     const annotation = useSelector((state) => state.annotation);
     
     const canvasRef = useRef(null);
-
     return (
       <SariskaCollaborativeAnnotation
               width={width}
