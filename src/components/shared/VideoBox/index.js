@@ -1,30 +1,9 @@
 import {
-  Avatar,
   Box,
-  Button,
-  makeStyles,
-  Tooltip,
-  Typography,
+  makeStyles
 } from "@material-ui/core";
-import React, { useEffect, useRef, useState } from "react";
-import SariskaCollaborativeAnnotation, {Utils} from "sariska-collaborative-annotation-sdk";
+import React, { useState } from "react";
 import { color } from "../../../assets/styles/_color";
-import Video from "../Video";
-import Audio from "../Audio";
-import PanTool from "@material-ui/icons/PanTool";
-import { useDispatch, useSelector } from "react-redux";
-import MicIcon from "@material-ui/icons/Mic";
-import MicOffIcon from "@material-ui/icons/MicOff";
-import { setPinParticipant } from "../../../store/actions/layout";
-import PinParticipant from "../PinParticipant";
-import classnames from "classnames";
-import { videoShadow, calculateSteamHeightAndExtraDiff, isMobileOrTab, isModerator, isModeratorLocal, getAnnotator } from "../../../utils";
-import AudioLevelIndicator from "../AudioIndicator";
-import SubTitle from "../SubTitle";
-import { useDocumentSize } from "../../../hooks/useDocumentSize";
-import { profile } from "../../../store/reducers/profile";
-import { useWindowResize } from "../../../hooks/useWindowResize";
-import UserAvatar from "../UserAvatar";
 import AnnotationBox from "../AnnotationBox";
 import NonAnnotationBox from "../NonAnnotationBox";
 
@@ -41,9 +20,6 @@ const VideoBox = ({
   isTranscription,
   numParticipants,
   isAnnotator
-  // handleColor,
-  // lineColor,
-  // handleClearCanvas
 }) => {
   
   const useStyles = makeStyles((theme) => ({
@@ -66,8 +42,6 @@ const VideoBox = ({
     }
   }));
   const classes = useStyles();
-  const conference = useSelector((state) => state.conference);
-  const annotation = useSelector((state) => state.annotation);
   const [visiblePinParticipant, setVisiblePinPartcipant] = useState(true);
 
   return (
@@ -92,9 +66,6 @@ const VideoBox = ({
           isTranscription={isTranscription}
           numParticipants={numParticipants}
           visiblePinParticipant={visiblePinParticipant}
-          // handleColor,
-          // lineColor,
-          // handleClearCanvas,
         />
         :
         <NonAnnotationBox 

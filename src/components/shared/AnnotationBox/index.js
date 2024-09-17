@@ -22,7 +22,8 @@ import VideoBoxContent from "../VideoBoxContent";
   }) => {
     const conference = useSelector((state) => state.conference);
     const annotation = useSelector((state) => state.annotation);
-    
+    const profile = useSelector((state) => state.profile);
+
     const canvasRef = useRef(null);
     return (
       <SariskaCollaborativeAnnotation
@@ -38,6 +39,7 @@ import VideoBoxContent from "../VideoBoxContent";
               parentCanvasRef={canvasRef}
               annotationTool={getAnnotationTool(annotation)}
               emojiType = '😎'
+              roomName={profile.meetingTitle}
       >
         
             <VideoBoxContent 

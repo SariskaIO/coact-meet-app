@@ -11,12 +11,11 @@ import React, { useEffect, useState, useRef } from "react";
 import SariskaMediaTransport from "sariska-media-transport";
 import { color } from "../../../assets/styles/_color";
 import { useHistory } from "react-router-dom";
-import { localTrackMutedChanged, updateLocalTrack } from "../../../store/actions/track";
+import { localTrackMutedChanged } from "../../../store/actions/track";
 import { addConference } from "../../../store/actions/conference";
 import {
   getToken,
   trimSpace,
-  detectUpperCaseChar,
   getRandomColor
 } from "../../../utils";
 import { addThumbnailColor } from "../../../store/actions/color";
