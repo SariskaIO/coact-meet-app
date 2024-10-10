@@ -1,6 +1,6 @@
 
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import { Box, makeStyles, Grid, Typography, Hidden } from '@material-ui/core'
 import { useSelector } from "react-redux";
 import CloseIcon from '@material-ui/icons/Close';
@@ -126,7 +126,7 @@ const ParticipantGrid = ({ dominantSpeakerId }) => {
         <Box className={classes.root}>
             <Grid className={classes.container} style={{ height: viewportHeight, width: viewportWidth }} container item>
                 {[...Array(rows)].map((x, i) =>
-                    <>
+                    <Fragment key={i}>
                         {[...Array(columns)].map((y, j) => {
                             return (tracks[participants[i * columns + j]?._id] || participants[i * columns + j]?._id) &&
                                 <Box className={classes.containerItem} style={{ 
@@ -134,7 +134,9 @@ const ParticipantGrid = ({ dominantSpeakerId }) => {
                                     top: getLeftTop(i, j, gridItemWidth, gridItemHeight, offset, lastRowOffset, rows, participants.length, viewportHeight, lastRowWidth, documentHeight).top, 
                                     width: rows === (i - 1) && lastRowWidth ? lastRowWidth : gridItemWidth,
                                     height: gridItemHeight
-                                }}>
+                                    }}
+                                    key={j}
+                                >
                                     {
                                      isMobileOrTab() ?
                                       i === 3 && j === 1 ?
@@ -176,7 +178,7 @@ const ParticipantGrid = ({ dominantSpeakerId }) => {
                                 </Box>
                             }
                         )}
-                    </>
+                    </Fragment>
                 )}
             </Grid>
         <DrawerBox
