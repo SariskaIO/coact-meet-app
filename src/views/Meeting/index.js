@@ -25,7 +25,7 @@ import {
   ANNOTATION_TOOLS,
 } from "../../constants";
 import { addMessage } from "../../store/actions/message";
-import { getUserById, preloadIframes, getDefaultDeviceId, isPortrait, isMobileOrTab } from "../../utils";
+import { getUserById, preloadIframes, getDefaultDeviceId, isPortrait, isMobileOrTab, isModeratorLocal } from "../../utils";
 import PermissionDialog from "../../components/shared/PermissionDialog";
 import SnackbarBox from "../../components/shared/Snackbar";
 import { unreadMessage } from "../../store/actions/chat";
@@ -54,6 +54,7 @@ import {
 import { addAnnotationFeature, setAnnotator } from "../../store/actions/annotation";
 import { SET_ANNOTATION_FEATURE } from "../../store/actions/types";
 import { getParticipantName } from '../../utils/index';
+import { profile } from "../../store/reducers/profile";
 
 const Meeting = () => {
   const history = useHistory();
@@ -243,18 +244,20 @@ const Meeting = () => {
       deviceListChanged
     );
   };
-console.log('prevrew', unmuteRequests)
   useEffect(() => {
     if (!conference) {
       return;
     }
+
     conference.addCommandListener('request-media-unmute', (data, id) => {
+      console.log('request-media-unmute')
       if(conference.isModerator()){
         setUnmuteRequests((prevRequests) => [...prevRequests, {id, value: data?.value}]);
       }
     });
 
     conference.addCommandListener('unmute-media-approval', async(data, id) => {
+      console.log('unmute-media-approval')
       const {value, attributes: {participantId, variant}} = data;
       if (value === 'approved' && participantId === conference.myUserId()) {
           // Unmute the participant's audio track
@@ -343,6 +346,12 @@ console.log('prevrew', unmuteRequests)
         if (track.isLocal()) {
           return;
         }
+        // if (isModeratorLocal(conference)) {
+        //       if (track.getType() === 'audio' || track.getType() === 'video') {
+        //           let participantId = track?.getParticipantId();
+        //           conference.muteParticipant(participantId, track.getType())
+        //       }
+        //     };
         dispatch(addRemoteTrack(track));
       }
     );
@@ -364,6 +373,7 @@ console.log('prevrew', unmuteRequests)
     conference.addEventListener(
       SariskaMediaTransport.events.conference.TRACK_MUTE_CHANGED,
       (track) => {
+        console.log('TRACK_MUTE_CHANGED', track)
         dispatch(remoteTrackMutedChanged());
       }
     );
@@ -718,14 +728,16 @@ console.log('prevrew', unmuteRequests)
           userId={item.id}
           displayName={item.displayName}
           text={`${item.displayName ? item.displayName : 'Participant'} wants to join`}
+          key={item.id}
         />
       ))}
       {unmuteRequests?.map((req) => (
         <PermissionDialog
-        denyLobbyAccess={() => rejectUnmuteAccess(req)}
-        allowLobbyAccess={() => allowUnmuteAccess(req)}
-        userId={req?.id}
-        text={`${getParticipantName(conference, req?.id) ? getParticipantName(conference, req?.id) : 'Participant'} have requested to unmute ${req?.value}`}
+          denyLobbyAccess={() => rejectUnmuteAccess(req)}
+          allowLobbyAccess={() => allowUnmuteAccess(req)}
+          userId={req?.id}
+          text={`${getParticipantName(conference, req?.id) ? getParticipantName(conference, req?.id) : 'Participant'} have requested to unmute ${req?.value}`}
+          key={req?.id}
       />
             ))}
       <SnackbarBox notification={notification} />
