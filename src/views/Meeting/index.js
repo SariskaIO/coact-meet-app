@@ -62,6 +62,7 @@ const Meeting = () => {
   const conference = useSelector((state) => state.conference);
   const connection = useSelector((state) => state.connection);
   const layout = useSelector((state) => state.layout);
+  const media = useSelector((state) => state.media);
   const notification = useSelector((state) => state.notification);
   const snackbar = useSelector((state) => state.snackbar);
   const isOnline = useOnlineStatus();
@@ -657,6 +658,11 @@ console.log('prevrew', unmuteRequests)
       if (annotation.annotator[id]) {
         dispatch(setAnnotator({ participantId: id, annotator: null }));
         dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ''));
+      }
+      if(media.enabledMediaParticipantIds[id]){
+        dispatch(
+          enableParticipantMedia({ participantId: id, media: "" })
+        );
       }
       dispatch(participantLeft(id));
     };
