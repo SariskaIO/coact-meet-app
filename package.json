@@ -33,7 +33,7 @@
     "redux": "^4.1.0",
     "redux-promise": "^0.6.0",
     "redux-thunk": "^2.3.0",
-    "sariska-collaborative-annotation-sdk": "https://github.com/SariskaIO/sariska-collaborative-annotation-sdk#coact-bugs",
+    "sariska-collaborative-annotation-sdk": "https://github.com/SariskaIO/sariska-collaborative-annotation-sdk",
     "sariska-media-transport": "https://github.com/SariskaIO/sariska-media-transport.git#5.0.12",
     "source-map-explorer": "^2.5.2",
     "web-vitals": "^1.0.1",
