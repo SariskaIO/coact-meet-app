@@ -197,7 +197,7 @@ const getAvatarColor =  (id)=> {
             height: '100%'
           }}>
           {filteredParticipants.map((participant, p) =>
-              <Box>
+              <Box key={participant}>
                 <Box className={classes.localBox}>
                   <Box className={classes.userBox}>
                     <Avatar

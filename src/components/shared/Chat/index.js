@@ -31,8 +31,8 @@ const useStyles = makeStyles((theme) => ({
         height: "93%",
         right: "2px",
         justifyContent: "space-between",
-        margin: theme.spacing(3, 0, 0, 0),
-        paddingBottom: theme.spacing(3),
+       // margin: theme.spacing(3, 0, 0, 0),
+       // paddingBottom: theme.spacing(3),
     },
     form: {
         textAlign: 'center',
@@ -219,7 +219,7 @@ const ChatPanel = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages.length])
-
+    
     return (
         <Box ref={refEl} className={classes.root}>
             <List className={classes.chatList}>
