@@ -79,7 +79,7 @@ const VideoMoreBox = ({
       position: "absolute",
       width: "100%",
       height: "100%",
-      zIndex: "999",
+      zIndex: "1",
     },
     textBox: {
       //bottom: 0,
