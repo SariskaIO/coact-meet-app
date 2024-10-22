@@ -93,7 +93,7 @@ import {
         position: "absolute",
         width: "100%",
         height: "100%",
-        zIndex: 2,
+        zIndex: "1",
       },
       textBox: {
         bottom: 0,
@@ -228,9 +228,9 @@ import {
         ) : (
           <Box
             style={{
-              width: getVideoContainerWidth(videoStreamHeight),
-              height: `${videoStreamHeight}px`,
-              left: `-${videoStreamDiff / 2}px`,
+              width: '100%',
+              height: `auto`,
+             // left: `-${videoStreamDiff / 2}px`,
               position: "absolute",
             }}
             className={classes.videoWrapper}

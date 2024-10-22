@@ -1,7 +1,7 @@
 
   import React, { useRef } from "react";
-  import SariskaCollaborativeAnnotation from "sariska-collaborative-annotation-sdk";
   import { useSelector } from "react-redux";
+  import SariskaCollaborativeAnnotation from 'sariska-collaborative-annotation-sdk'
   import { getAnnotationTool, isAnnotator, isModerator, isModeratorLocal } from "../../../utils";
   
 import VideoBoxContent from "../VideoBoxContent";
