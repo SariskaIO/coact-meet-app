@@ -144,7 +144,9 @@ export const getUserById = (id, conference) => {
      if (id === conference.myUserId()) {
          return conference.getLocalUser()
      }
-     return conference?.participants[id]?._identity?.user
+     let participants = conference?.getParticipantsWithoutHidden();
+     let participant = participants.find(participant => participant?._id === id)
+     return participant?._identity?.user
 }
 
 export const clearAllTokens = () => {

@@ -19,7 +19,7 @@ const SnackbarBox = ({notification}) => {
         if (!notification?.autoHide) {
             return;
         }
-        setTimeout(()=>{
+        const timer = setTimeout(()=>{
             setOpen(false);
             dispatch(showNotification({
             message: "",
@@ -27,6 +27,9 @@ const SnackbarBox = ({notification}) => {
             autoHide: true
         }))
         }, 2000);
+        return () => {
+            clearTimeout(timer);
+        }
     }, [notification?.message]);
 
     if (!notification?.message) {

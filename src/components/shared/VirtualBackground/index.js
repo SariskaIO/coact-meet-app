@@ -324,12 +324,15 @@ export default function VirtualBackground({VirtualOnClick}) {
                 </Grid>
             </Grid>
             {[...Array(totalRow)].map((x, i) =>
-                <Grid container className={classes.mainImagesContainer}>
+                <Grid container className={classes.mainImagesContainer} key={i}>
                     {[...Array(4)].map((y, j) =>
-                        <Grid item xs={6}><Box className={classes.imageItem} onClick={() => imageBackground(images[i * 4 + j].url)}>
-                            <Tooltip title={images[i * 4 + j].name}>
-                                <Box className={classes.paper}><img src={images[i * 4 + j].thumbnail} alt={images[i * 4 + j].name}/></Box></Tooltip>
-                                </Box>
+                        <Grid item xs={6} key={j}>
+                            <Box className={classes.imageItem} onClick={() => imageBackground(images[i * 4 + j].url)}>
+                                <Tooltip title={images[i * 4 + j].name}>
+                                    <Box className={classes.paper}><img src={images[i * 4 + j].thumbnail} alt={images[i * 4 + j].name}/>
+                                    </Box>
+                                </Tooltip>
+                            </Box>
                         </Grid>
                     )}
                 </Grid>
@@ -337,11 +340,16 @@ export default function VirtualBackground({VirtualOnClick}) {
             { extraRow &&
                 <Grid container className={classes.extraImagesContainer}>
                     {[...Array(extraRow)].map((x, i) =>
-                        <Grid item xs={6}> <Box className={classes.imageItem} onClick={() => imageBackground(images[(totalRow * 4) + i].url)}>
-                            <Tooltip title={images[(totalRow * 4) + i].name}><Box className={classes.paper}><img
-                                src={images[(totalRow * 4) + i].thumbnail}
-                                alt={images[(totalRow * 4) + i].name}/></Box></Tooltip>
-                                </Box>
+                        <Grid item xs={6} key={i}>
+                            <Box className={classes.imageItem} onClick={() => imageBackground(images[(totalRow * 4) + i].url)}>
+                                <Tooltip title={images[(totalRow * 4) + i].name}>
+                                    <Box className={classes.paper}>
+                                        <img
+                                            src={images[(totalRow * 4) + i].thumbnail}
+                                            alt={images[(totalRow * 4) + i].name}/>
+                                    </Box>
+                                </Tooltip>
+                            </Box>
                         </Grid>
                     )}
                 </Grid>

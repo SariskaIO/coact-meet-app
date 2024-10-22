@@ -25,13 +25,14 @@ import VideoBoxContent from "../VideoBoxContent";
     const profile = useSelector((state) => state.profile);
 
     const canvasRef = useRef(null);
+    
     return (
       <SariskaCollaborativeAnnotation
               width={width}
               height={height}
               lineColor={annotation.style.color}
               lineWidth={annotation.style.width}
-              zIndex = {2}
+              zIndex = {3}
               isModerator={isModerator(conference)}
               isModeratorLocal={isModeratorLocal(conference)}
               isParticipantAccess={false}
@@ -43,18 +44,18 @@ import VideoBoxContent from "../VideoBoxContent";
       >
         
             <VideoBoxContent 
-            participantTracks={participantTracks}
-            participantDetails={participantDetails}
-            localUserId={localUserId}
-            width={width}
-            height={height}
-            isPresenter={isPresenter}
-            isActiveSpeaker={isActiveSpeaker}
-            isFilmstrip={isFilmstrip}
-            isLargeVideo={isLargeVideo}
-            isTranscription={isTranscription}
-            numParticipants={numParticipants}
-            visiblePinParticipant={visiblePinParticipant}
+              participantTracks={participantTracks}
+              participantDetails={participantDetails}
+              localUserId={localUserId}
+              width={width}
+              height={height}
+              isPresenter={isPresenter}
+              isActiveSpeaker={isActiveSpeaker}
+              isFilmstrip={isFilmstrip}
+              isLargeVideo={isLargeVideo}
+              isTranscription={isTranscription}
+              numParticipants={numParticipants}
+              visiblePinParticipant={visiblePinParticipant}
             />
         </SariskaCollaborativeAnnotation>
     );

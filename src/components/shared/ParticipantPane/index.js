@@ -54,6 +54,7 @@ const PartcipantPane = ({remoteTracks, localTracks, dominantSpeakerId, panelHeig
                     isActiveSpeaker={dominantSpeakerId===participant._id}
                     participantDetails={participant?._identity?.user}
                     participantTracks={tracks[participant._id]}
+                    key={conference.myUserId()}
                 />
             )}
         </Box>)

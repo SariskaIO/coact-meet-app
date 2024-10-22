@@ -39,9 +39,9 @@ const MicIndicator = ({vol}) => {
         <div className={classes.root}>
             {  allPids.map((item, index)=>{
                 if ( index < numberOfPidsToColor  ) {
-                    return  <div style={{backgroundColor: item}} className={classes.activeBg}></div>;
+                    return  <div key={index} style={{backgroundColor: item}} className={classes.activeBg}></div>;
                 } else {
-                    return  <div style={{backgroundColor: "#272931"}} className={classes.activeBg}></div>;;
+                    return  <div key={index} style={{backgroundColor: "#272931"}} className={classes.activeBg}></div>;;
                 }
             })} 
         </div>

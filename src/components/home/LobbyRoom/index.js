@@ -329,7 +329,10 @@ const LobbyRoom = ({ tracks }) => {
     // const conference = connection.initJitsiConference({
     //   createVADProcessor: SariskaMediaTransport.effects.createRnnoiseProcessor,
     // });
-    const conference = connection.initJitsiConference();
+    const conference = connection.initJitsiConference({
+      startAudioMuted: name !== 'admin',
+      startVideoMuted: name !== 'admin'  
+    });
     tracks.forEach(async track => await conference.addTrack(track));
 
     conference.addEventListener(
@@ -351,7 +354,6 @@ const LobbyRoom = ({ tracks }) => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.USER_ROLE_CHANGED,
       (id, role) => {
-        console.log('USER_ROLE_CHANGED', id, role)
         if (conference.isModerator() && !testMode) {
           conference.enableLobby();
           history.push(`/${meetingTitle}`);
@@ -371,14 +373,21 @@ const LobbyRoom = ({ tracks }) => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.USER_JOINED,
       (id, participant) => {
-        if (!conference.isModerator()) {
-          const tracks = conference.getLocalTracks();
-          tracks.forEach(async(track) => {
-              if (track.getType() === 'audio' || track.getType() === 'video') {
-                  track.mute();
-              }
-          });
-      }
+      //   if (name !== 'admin') {
+      //     let participants = conference.getParticipantsWithoutHidden();
+      //     const tracks = conference.getLocalTracks();
+      //     console.log('USER_JOINED', participant, participants, conference.isModerator(), conference.myUserId())
+      //     tracks.forEach(async(track) => {
+      //       console.log('tracks.forEach', participant?._id === track.getParticipantId(), track.getParticipantId())
+      //         if(participant?._id === track.getParticipantId()){
+      //           console.log('participant?._id === track.getParticipantId()',)
+      //           return;
+      //         }
+      //         if (track.getType() === 'audio' || track.getType() === 'video') {
+      //             track.mute();
+      //         }
+      //     });
+      // }
         dispatch(
           addThumbnailColor({ participantId: id, color: getRandomColor() })
         );
@@ -388,7 +397,6 @@ const LobbyRoom = ({ tracks }) => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.CONFERENCE_FAILED,
       async (error) => {
-        console.log('CONFERENCE_FAILED', error)
         if (
           error === SariskaMediaTransport.errors.conference.MEMBERS_ONLY_ERROR
         ) {

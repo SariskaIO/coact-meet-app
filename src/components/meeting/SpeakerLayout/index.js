@@ -7,7 +7,7 @@ import {useWindowResize} from "../../../hooks/useWindowResize";
 import {useDocumentSize} from "../../../hooks/useDocumentSize";
 import classnames from "classnames";
 import * as Constants from "../../../constants";
-import { getAnnotator, getRandomParticipant, isAnnotator } from '../../../utils';
+import { getAnnotator, getRandomParticipant, isAnnotator, isModerator, isModeratorLocal } from '../../../utils';
 
 const useStyles = makeStyles((theme) => ({
     root: {

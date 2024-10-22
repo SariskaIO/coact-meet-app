@@ -345,6 +345,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     if(type === 'video'){
       await videoTrack?.mute();
     }
+    conference.removeLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ENABLE_MEDIA);
     dispatch(localTrackMutedChanged());
   }
 
@@ -788,46 +789,46 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     </>
   );
 
-  const toggleFullscreen = () => {
-    if (isFullscreen()) {
-      exitFullscreen();
-    } else {
-      requestFullscreen();
-    }
-  };
+  // const toggleFullscreen = () => {
+  //   if (isFullscreen()) {
+  //     exitFullscreen();
+  //   } else {
+  //     requestFullscreen();
+  //   }
+  // };
 
-  const AddFShandler = () => {
-    if (isFullscreen()) {
-      dispatch(setFullScreen(ENTER_FULL_SCREEN_MODE));
-    } else {
-      dispatch(setFullScreen(EXIT_FULL_SCREEN_MODE));
-    }
-  };
+  // const AddFShandler = () => {
+  //   if (isFullscreen()) {
+  //     dispatch(setFullScreen(ENTER_FULL_SCREEN_MODE));
+  //   } else {
+  //     dispatch(setFullScreen(EXIT_FULL_SCREEN_MODE));
+  //   }
+  // };
 
-  const addFullscreenListeners = () => {
-    document.addEventListener("fullscreenchange", AddFShandler);
-    document.addEventListener("webkitfullscreenchange", AddFShandler);
-    document.addEventListener("mozfullscreenchange", AddFShandler);
-    document.addEventListener("MSFullscreenChange", AddFShandler);
-  };
+  // const addFullscreenListeners = () => {
+  //   document.addEventListener("fullscreenchange", AddFShandler);
+  //   document.addEventListener("webkitfullscreenchange", AddFShandler);
+  //   document.addEventListener("mozfullscreenchange", AddFShandler);
+  //   document.addEventListener("MSFullscreenChange", AddFShandler);
+  // };
 
-  const removeFullscreenListeners = () => {
-    document.removeEventListener("fullscreenchange", AddFShandler);
-    document.removeEventListener("webkitfullscreenchange", AddFShandler);
-    document.removeEventListener("mozfullscreenchange", AddFShandler);
-    document.removeEventListener("MSFullscreenChange", AddFShandler);
-  };
+  // const removeFullscreenListeners = () => {
+  //   document.removeEventListener("fullscreenchange", AddFShandler);
+  //   document.removeEventListener("webkitfullscreenchange", AddFShandler);
+  //   document.removeEventListener("mozfullscreenchange", AddFShandler);
+  //   document.removeEventListener("MSFullscreenChange", AddFShandler);
+  // };
 
-  const resize = () => {
-    if (skipResize) {
-      return;
-    }
-    if (window.innerHeight == window.screen.height) {
-      dispatch(setFullScreen(ENTER_FULL_SCREEN_MODE));
-    } else {
-      dispatch(setFullScreen(EXIT_FULL_SCREEN_MODE));
-    }
-  };
+  // const resize = () => {
+  //   if (skipResize) {
+  //     return;
+  //   }
+  //   if (window.innerHeight == window.screen.height) {
+  //     dispatch(setFullScreen(ENTER_FULL_SCREEN_MODE));
+  //   } else {
+  //     dispatch(setFullScreen(EXIT_FULL_SCREEN_MODE));
+  //   }
+  // };
 
   const toggleView = () => {
     if (layout.type === PRESENTATION || layout.type === SPEAKER) {
@@ -880,16 +881,16 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     const interval = setInterval(() => {
       setTime(formatAMPM(new Date()));
     }, 1000);
-    document.addEventListener("dblclick", toggleFullscreen);
+   // document.addEventListener("dblclick", toggleFullscreen);
     // window.addEventListener("resize", ()=> {
     //   clearTimeout(doit);
     //   doit = setTimeout(resize, 250);
     // });
-    addFullscreenListeners();
+   // addFullscreenListeners();
     return () => {
-      document.removeEventListener("dblclick", toggleFullscreen);
+    //  document.removeEventListener("dblclick", toggleFullscreen);
       clearInterval(interval);
-      removeFullscreenListeners();
+    //  removeFullscreenListeners();
       // window.removeEventListener("resize", resize);
     };
   }, []);
@@ -1099,7 +1100,8 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   };
   
   const isModeratorFlag = conference && isModerator(conference);
-  let disabledIconStyle = { opacity: isModeratorFlag ? 1 : 0.5}
+  let disabledIconStyle = { opacity: isModeratorFlag ? 1 : 0.5};
+
   return (
     <Box id="footer" className={classes.root}>
 
@@ -1256,7 +1258,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           {participantList("right")}
         </DrawerBox>
         <StyledTooltip title="Chat Box">
-          <StyledBadge badgeContent={unread}>
+          <StyledBadge badgeContent={unread} overlap="rectangular">
             <ChatIcon
               onClick={toggleChatDrawer("right", true)}
               className={classes.chat}
